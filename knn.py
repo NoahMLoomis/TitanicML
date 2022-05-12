@@ -13,16 +13,17 @@ class Titanic():
         self.raw_file = pd.read_csv("./data_files/Titanic/predict.csv")
         self.file = self.prep_data(self.file)
         # self.display_info()
-        self.display_charts()
+        self.display_barchart_sex()
+        self.display_barchart_class()
         self.le = preprocessing.LabelEncoder()
         x_train, x_test, y_train, y_test = self.train("Survived")
         self.model = self.train_model(x_train, x_test, y_train, y_test)
 
-        self.raw_file = self.prep_data(self.raw_file)
-        self.le = preprocessing.LabelEncoder()
-        print(self.raw_file)        
-        y_pred2 = self.model.predict(self.raw_file)
-        print(metrics.accuracy_score(self.raw_file, y_pred2))
+        # self.raw_file = self.prep_data(self.raw_file)
+        # self.le = preprocessing.LabelEncoder()
+        # print(self.raw_file)
+        # y_pred2 = self.model.predict(self.raw_file)
+        # print(metrics.accuracy_score(self.raw_file, y_pred2))
 
         plt.show()
 
@@ -48,17 +49,51 @@ class Titanic():
 
     def train_model(self, x_train, x_test, y_train, y_test):
         knn = KNeighborsClassifier(7)
-        print(x_train)
         model = knn.fit(x_train, y_train)
         y_pred = model.predict(x_test)
         print(metrics.accuracy_score(y_test, y_pred))
         print(metrics.confusion_matrix(y_test, y_pred))
         return model
 
-    def display_charts(self):
-        survived = self.file[self.file['Survived'].isin([1])]
-        # The following bar chart shows that more women survived than men.
-        survived["Sex"].value_counts().plot(kind="bar")
+    def display_barchart_sex(self):
+        survived, dead = self.get_survived_and_dead()
+        survived_men = survived[survived["Sex"].isin([1])]
+        survived_women = survived[survived["Sex"].isin([0])]
+
+        dead_men = dead[dead["Sex"].isin([1])]
+        dead_women = dead[dead["Sex"].isin([0])]
+
+        fix, ax = plt.subplots()
+        x = ["Women", "Men"]
+        y1 = [len(survived_women), len(survived_men)]
+        y2 = [len(dead_women), len(dead_men)]
+        ax.bar(x, y1)
+        ax.bar(x, y2, bottom=y1, color='r')
+        plt.legend(["Alive", "Dead"])
+        plt.ylabel("Number of people")
+
+    def display_barchart_class(self):
+        survived, dead = self.get_survived_and_dead()
+
+        survived_first = survived[survived["Pclass"].isin([1])]
+        survived_second = survived[survived["Pclass"].isin([2])]
+        survived_third = survived[survived["Pclass"].isin([3])]
+
+        dead_first = dead[dead["Pclass"].isin([1])]
+        dead_second = dead[dead["Pclass"].isin([2])]
+        dead_third = dead[dead["Pclass"].isin([3])]
+
+        fix, ax = plt.subplots()
+        x = ["1st Class", "2nd Class", "3rd Class"]
+        y1 = [len(survived_first), len(survived_second), len(survived_third)]
+        y2 = [len(dead_first), len(dead_second), len(dead_third)]
+        ax.bar(x, y1)
+        ax.bar(x, y2, bottom=y1, color='r')
+        plt.legend(["Alive", "Dead"])
+        plt.ylabel("Number of people")
+
+    def get_survived_and_dead(self):
+        return self.file[self.file['Survived'].isin([1])], self.file[self.file['Survived'].isin([0])]
 
     def prep_data(self, data):
         data.drop(['Ticket'], axis=1, inplace=True)
