@@ -4,6 +4,7 @@ import math
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import RandomForestClassifier
 import sklearn.metrics as metrics
 
 
@@ -16,16 +17,18 @@ class Titanic():
         self.display_barchart_sex()
         self.display_barchart_class()
         self.le = preprocessing.LabelEncoder()
-        x_train, x_test, y_train, y_test = self.train("Survived")
-        self.model = self.train_model(x_train, x_test, y_train, y_test)
+        x_train, x_test, y_train, y_test = self.train("Survived", 0.4)
+        self.knn_model = self.train_knn_model(x_train, x_test, y_train, y_test)
+        x_train, x_test, y_train, y_test = self.train("Survived", 0.2)
+        self.rf_model = self.train_random_forest_model(
+            x_train, x_test, y_train, y_test)
 
-        # self.raw_file = self.prep_data(self.raw_file)
-        # self.le = preprocessing.LabelEncoder()
+        self.raw_file = self.prep_data(self.raw_file)
         # print(self.raw_file)
         # y_pred2 = self.model.predict(self.raw_file)
         # print(metrics.accuracy_score(self.raw_file, y_pred2))
 
-        plt.show()
+        # plt.show()
 
     def encode(self, data, to_convert):
         self.le = preprocessing.LabelEncoder()
@@ -40,26 +43,47 @@ class Titanic():
         print(self.file.info())
         print(self.file.describe())
 
-    def train(self, resp):
+    def train(self, resp, test_size=0.75):
         y = self.file[resp]
         predictors = list(self.file.columns)
         predictors.remove(resp)
         x = self.file[predictors]
-        return train_test_split(x, y, random_state=1111)
+        return train_test_split(x, y, random_state=1111, test_size=test_size)
 
-    def train_model(self, x_train, x_test, y_train, y_test):
-        knn = KNeighborsClassifier(7)
+    def train_knn_model(self, x_train, x_test, y_train, y_test):
+        knn = KNeighborsClassifier(13)
         model = knn.fit(x_train, y_train)
         y_pred = model.predict(x_test)
         print(metrics.accuracy_score(y_test, y_pred))
         print(metrics.confusion_matrix(y_test, y_pred))
         return model
 
+    def train_random_forest_model(self, x_train, x_test, y_train, y_test):
+        clf = RandomForestClassifier(n_estimators=1000)
+        model = clf.fit(x_train, y_train)
+        y_pred = model.predict(x_test)
+        print(metrics.accuracy_score(y_test, y_pred))
+        print(metrics.confusion_matrix(y_test, y_pred))
+        return model
+
+    def get_survived_and_dead(self):
+        return self.file[self.file['Survived'].isin([1])], self.file[self.file['Survived'].isin([0])]
+
+    def prep_data(self, data):
+        data.drop(['Ticket'], axis=1, inplace=True)
+        data.drop(['Name'], axis=1, inplace=True)
+        data.drop(['Cabin'], axis=1, inplace=True)
+        data.drop(['Embarked'], axis=1, inplace=True)
+        data.fillna({"Age": data["Age"].median()}, inplace=True)
+        return self.encode(data, "Sex")
+
     def display_barchart_sex(self):
+        # This chart shows us that though there was significantly more men than women on the Titanic, a much higher percentage of men died compared to women. For the men, close to 75% died, on the womens side, around 20% died. This is not suprising since back in the day, it was common to evacuate women and children first.
+
         survived, dead = self.get_survived_and_dead()
+
         survived_men = survived[survived["Sex"].isin([1])]
         survived_women = survived[survived["Sex"].isin([0])]
-
         dead_men = dead[dead["Sex"].isin([1])]
         dead_women = dead[dead["Sex"].isin([0])]
 
@@ -73,12 +97,13 @@ class Titanic():
         plt.ylabel("Number of people")
 
     def display_barchart_class(self):
+        # This chart shows that though the majority of passengers were 3rd class, they have the largest amount of people who died. Compared to the first and second class, where in 2nd class close to 50% died, and in first class less than 50% died. This shows us that the class you were in had a direct relationship with your likelyhood of survival.
+
         survived, dead = self.get_survived_and_dead()
 
         survived_first = survived[survived["Pclass"].isin([1])]
         survived_second = survived[survived["Pclass"].isin([2])]
         survived_third = survived[survived["Pclass"].isin([3])]
-
         dead_first = dead[dead["Pclass"].isin([1])]
         dead_second = dead[dead["Pclass"].isin([2])]
         dead_third = dead[dead["Pclass"].isin([3])]
@@ -91,17 +116,6 @@ class Titanic():
         ax.bar(x, y2, bottom=y1, color='r')
         plt.legend(["Alive", "Dead"])
         plt.ylabel("Number of people")
-
-    def get_survived_and_dead(self):
-        return self.file[self.file['Survived'].isin([1])], self.file[self.file['Survived'].isin([0])]
-
-    def prep_data(self, data):
-        data.drop(['Ticket'], axis=1, inplace=True)
-        data.drop(['Name'], axis=1, inplace=True)
-        data.drop(['Cabin'], axis=1, inplace=True)
-        data.drop(['Embarked'], axis=1, inplace=True)
-        data.fillna({"Age": data["Age"].median()}, inplace=True)
-        return self.encode(data, "Sex")
 
 
 if __name__ == "__main__":
