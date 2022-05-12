@@ -5,6 +5,7 @@ from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
+from sklearn import svm
 import sklearn.metrics as metrics
 
 
@@ -19,16 +20,20 @@ class Titanic():
         self.le = preprocessing.LabelEncoder()
         x_train, x_test, y_train, y_test = self.train("Survived", 0.4)
         self.knn_model = self.train_knn_model(x_train, x_test, y_train, y_test)
+        
         x_train, x_test, y_train, y_test = self.train("Survived", 0.2)
         self.rf_model = self.train_random_forest_model(
             x_train, x_test, y_train, y_test)
-
+        
+        x_train, x_test, y_train, y_test = self.train("Survived", 0.4)
+        self.svm_model = self.train_support_vector_machines_model(x_train, x_test, y_train, y_test)
+        
         self.raw_file = self.prep_data(self.raw_file)
         # print(self.raw_file)
         # y_pred2 = self.model.predict(self.raw_file)
         # print(metrics.accuracy_score(self.raw_file, y_pred2))
 
-        # plt.show()
+        plt.show()
 
     def encode(self, data, to_convert):
         self.le = preprocessing.LabelEncoder()
@@ -60,6 +65,14 @@ class Titanic():
 
     def train_random_forest_model(self, x_train, x_test, y_train, y_test):
         clf = RandomForestClassifier(n_estimators=1000)
+        model = clf.fit(x_train, y_train)
+        y_pred = model.predict(x_test)
+        print(metrics.accuracy_score(y_test, y_pred))
+        print(metrics.confusion_matrix(y_test, y_pred))
+        return model
+
+    def train_support_vector_machines_model(self, x_train, x_test, y_train, y_test):
+        clf = svm.SVC(kernel="linear")
         model = clf.fit(x_train, y_train)
         y_pred = model.predict(x_test)
         print(metrics.accuracy_score(y_test, y_pred))
