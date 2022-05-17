@@ -13,25 +13,23 @@ class Titanic():
     def __init__(self):
         self.file = pd.read_csv("./data_files/Titanic/traintest.csv")
         self.raw_file = pd.read_csv("./data_files/Titanic/predict.csv")
+        self.tested = pd.read_csv("./data_files/Titanic/tested.csv")
+
         self.file = self.prep_data(self.file)
-        # self.display_info()
+        self.raw_file = self.prep_data(self.raw_file)
+        self.tested = self.prep_data(self.tested)
+
+        # self.display_info(self.file)
+
         self.display_barchart_sex()
         self.display_barchart_class()
-        self.le = preprocessing.LabelEncoder()
-        x_train, x_test, y_train, y_test = self.train("Survived", 0.4)
-        self.knn_model = self.train_knn_model(x_train, x_test, y_train, y_test)
+
+        print("\n---------------Training Models---------------\n")
+        self.models = self.train_models()
         
-        x_train, x_test, y_train, y_test = self.train("Survived", 0.2)
-        self.rf_model = self.train_random_forest_model(
-            x_train, x_test, y_train, y_test)
-        
-        x_train, x_test, y_train, y_test = self.train("Survived", 0.4)
-        self.svm_model = self.train_support_vector_machines_model(x_train, x_test, y_train, y_test)
-        
-        self.raw_file = self.prep_data(self.raw_file)
-        # print(self.raw_file)
-        # y_pred2 = self.model.predict(self.raw_file)
-        # print(metrics.accuracy_score(self.raw_file, y_pred2))
+        print("---------------Testing accuracy---------------\n")
+        for model in self.models:
+            self.test_accuracy(model)
 
         plt.show()
 
@@ -43,40 +41,59 @@ class Titanic():
         data[to_convert] = encoded_values
         return data
 
-    def display_info(self):
-        print(self.file.head())
-        print(self.file.info())
-        print(self.file.describe())
+    def display_info(self, data_file):
+        print(data_file.head())
+        print(data_file.info())
+        print(data_file.describe())
 
-    def train(self, resp, test_size=0.75):
+    def test_accuracy(self, model):
+        print(f'Model: {model}')
+        predict = model.predict(self.raw_file)
+        print(f'Tested Accuracy: {metrics.accuracy_score(self.tested["Survived"], predict)}\n')
+
+    def train_data(self, resp, test_size=0.75):
         y = self.file[resp]
         predictors = list(self.file.columns)
         predictors.remove(resp)
         x = self.file[predictors]
         return train_test_split(x, y, random_state=1111, test_size=test_size)
 
+    def train_models(self):
+        x_train, x_test, y_train, y_test = self.train_data("Survived", 0.4)
+        knn_model = self.train_knn_model(x_train, x_test, y_train, y_test)
+
+        x_train, x_test, y_train, y_test = self.train_data("Survived", 0.2)
+        rf_model = self.train_random_forest_model(
+            x_train, x_test, y_train, y_test)
+
+        x_train, x_test, y_train, y_test = self.train_data("Survived", 0.4)
+        svm_model = self.train_support_vector_machines_model(
+            x_train, x_test, y_train, y_test)
+
+        return knn_model, rf_model, svm_model
+
     def train_knn_model(self, x_train, x_test, y_train, y_test):
         knn = KNeighborsClassifier(13)
         model = knn.fit(x_train, y_train)
         y_pred = model.predict(x_test)
-        print(metrics.accuracy_score(y_test, y_pred))
-        print(metrics.confusion_matrix(y_test, y_pred))
+        print(f'KNN accuracy: {metrics.accuracy_score(y_test, y_pred)}')
+        print(f'Confusion matrix:\n {metrics.confusion_matrix(y_test, y_pred)}\n\n')
         return model
 
     def train_random_forest_model(self, x_train, x_test, y_train, y_test):
         clf = RandomForestClassifier(n_estimators=1000)
         model = clf.fit(x_train, y_train)
         y_pred = model.predict(x_test)
-        print(metrics.accuracy_score(y_test, y_pred))
-        print(metrics.confusion_matrix(y_test, y_pred))
+        print(f'Random forest accuracy: {metrics.accuracy_score(y_test, y_pred)}')
+        print(f'Confusion matrix:\n {metrics.confusion_matrix(y_test, y_pred)}\n\n')
         return model
 
     def train_support_vector_machines_model(self, x_train, x_test, y_train, y_test):
         clf = svm.SVC(kernel="linear")
         model = clf.fit(x_train, y_train)
         y_pred = model.predict(x_test)
-        print(metrics.accuracy_score(y_test, y_pred))
-        print(metrics.confusion_matrix(y_test, y_pred))
+        print(f'SVM accuracy: {metrics.accuracy_score(y_test, y_pred)}')
+        print(f'Confusion matrix:\n {metrics.confusion_matrix(y_test, y_pred)}\n\n')
         return model
 
     def get_survived_and_dead(self):
@@ -88,6 +105,7 @@ class Titanic():
         data.drop(['Cabin'], axis=1, inplace=True)
         data.drop(['Embarked'], axis=1, inplace=True)
         data.fillna({"Age": data["Age"].median()}, inplace=True)
+        data.fillna({"Fare": data["Fare"].median()}, inplace=True)
         return self.encode(data, "Sex")
 
     def display_barchart_sex(self):
