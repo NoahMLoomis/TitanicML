@@ -26,7 +26,7 @@ class Titanic():
 
         print("\n---------------Training Models---------------\n")
         self.models = self.train_models()
-        
+
         print("---------------Testing accuracy---------------\n")
         for model in self.models:
             self.test_accuracy(model)
@@ -49,7 +49,8 @@ class Titanic():
     def test_accuracy(self, model):
         print(f'Model: {model}')
         predict = model.predict(self.raw_file)
-        print(f'Tested Accuracy: {metrics.accuracy_score(self.tested["Survived"], predict)}\n')
+        print(
+            f'Tested Accuracy: {metrics.accuracy_score(self.tested["Survived"], predict)}\n')
 
     def train_data(self, resp, test_size=0.75):
         y = self.file[resp]
@@ -77,15 +78,18 @@ class Titanic():
         model = knn.fit(x_train, y_train)
         y_pred = model.predict(x_test)
         print(f'KNN accuracy: {metrics.accuracy_score(y_test, y_pred)}')
-        print(f'Confusion matrix:\n {metrics.confusion_matrix(y_test, y_pred)}\n\n')
+        print(
+            f'Confusion matrix:\n {metrics.confusion_matrix(y_test, y_pred)}\n\n')
         return model
 
     def train_random_forest_model(self, x_train, x_test, y_train, y_test):
         clf = RandomForestClassifier(n_estimators=1000)
         model = clf.fit(x_train, y_train)
         y_pred = model.predict(x_test)
-        print(f'Random forest accuracy: {metrics.accuracy_score(y_test, y_pred)}')
-        print(f'Confusion matrix:\n {metrics.confusion_matrix(y_test, y_pred)}\n\n')
+        print(
+            f'Random forest accuracy: {metrics.accuracy_score(y_test, y_pred)}')
+        print(
+            f'Confusion matrix:\n {metrics.confusion_matrix(y_test, y_pred)}\n\n')
         return model
 
     def train_support_vector_machines_model(self, x_train, x_test, y_train, y_test):
@@ -93,7 +97,8 @@ class Titanic():
         model = clf.fit(x_train, y_train)
         y_pred = model.predict(x_test)
         print(f'SVM accuracy: {metrics.accuracy_score(y_test, y_pred)}')
-        print(f'Confusion matrix:\n {metrics.confusion_matrix(y_test, y_pred)}\n\n')
+        print(
+            f'Confusion matrix:\n {metrics.confusion_matrix(y_test, y_pred)}\n\n')
         return model
 
     def get_survived_and_dead(self):
