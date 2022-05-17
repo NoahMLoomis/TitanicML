@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import math
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import svm
 import sklearn.metrics as metrics
@@ -61,7 +61,7 @@ class Titanic():
 
     def train_models(self):
         x_train, x_test, y_train, y_test = self.train_data("Survived", 0.4)
-        knn_model = self.train_knn_model(x_train, x_test, y_train, y_test)
+        lg_model = self.train_lg_model(x_train, x_test, y_train, y_test)
 
         x_train, x_test, y_train, y_test = self.train_data("Survived", 0.2)
         rf_model = self.train_random_forest_model(
@@ -71,13 +71,13 @@ class Titanic():
         svm_model = self.train_support_vector_machines_model(
             x_train, x_test, y_train, y_test)
 
-        return knn_model, rf_model, svm_model
+        return lg_model, rf_model, svm_model
 
-    def train_knn_model(self, x_train, x_test, y_train, y_test):
-        knn = KNeighborsClassifier(13)
-        model = knn.fit(x_train, y_train)
+    def train_lg_model(self, x_train, x_test, y_train, y_test):
+        lg = LogisticRegression()
+        model = lg.fit(x_train, y_train)
         y_pred = model.predict(x_test)
-        print(f'KNN accuracy: {metrics.accuracy_score(y_test, y_pred)}')
+        print(f'Logistic Regression accuracy: {metrics.accuracy_score(y_test, y_pred)}')
         print(
             f'Confusion matrix:\n {metrics.confusion_matrix(y_test, y_pred)}\n\n')
         return model
