@@ -1,4 +1,7 @@
 import pandas as pd
+import matplotlib
+# Weird fix for getting graphs to show
+matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import math
 from sklearn import preprocessing
